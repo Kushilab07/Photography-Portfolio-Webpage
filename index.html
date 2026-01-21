@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lumina | Creative Photography</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Montserrat:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        :root {
+            --cursor-size: 20px;
+            --cursor-hover-size: 60px;
+            --text-primary: #f3f4f6;
+            --bg-primary: #0f0f0f;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            cursor: none; /* Hide default cursor */
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, .serif {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Custom Cursor */
+        .cursor-dot,
+        .cursor-outline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: white;
+        }
+
+        .cursor-outline {
+            width: var(--cursor-size);
+            height: var(--cursor-size);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        body.hovering .cursor-outline {
+            width: var(--cursor-hover-size);
+            height: var(--cursor-hover-size);
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(2px);
+            border-color: transparent;
+        }
+
+        /* Smooth text reveal classes */
+        .reveal-text {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+        }
+
+        .char {
+            transform: translateY(115%);
+            transition: transform 0.5s;
+        }
+        
+        /* Image Hover Effects */
+        .img-container {
+            overflow: hidden;
+            position: relative;
+        }
+
+        .img-container img {
+            transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .img-container:hover img {
+            transform: scale(1.1);
+        }
+
+        .img-overlay {
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .img-container:hover .img-overlay {
+            opacity: 1;
+        }
+
+        /* Marquee Animation */
+        .marquee-container {
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Navigation Menu Overlay */
+        .menu-overlay {
+            clip-path: circle(0% at 95% 5%);
+            transition: clip-path 0.8s cubic-bezier(0.86, 0, 0.07, 1);
+        }
+
+        .menu-open .menu-overlay {
+            clip-path: circle(150% at 95% 5%);
+        }
+        
+        /* Loader */
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease;
+        }
+        
+        .loader-bar {
+            width: 2px;
+            height: 0;
+            background: #fff;
+            animation: load 1.5s ease-in-out forwards;
+        }
+
+        @keyframes load {
+            0% { height: 0; }
+            50% { height: 100px; }
+            100% { height: 0; }
+        }
+
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-bar"></div>
+    </div>
+
+    <!-- Custom Cursor Elements -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed w-full z-50 px-6 py-6 flex justify-between items-center mix-blend-difference text-white">
+        <a href="#" class="text-2xl font-bold tracking-widest hover-trigger z-50">LUMINA</a>
+        
+        <div class="z-50 cursor-pointer hover-trigger" id="menu-btn">
+            <div class="w-8 h-0.5 bg-white mb-1.5 transition-all" id="bar1"></div>
+            <div class="w-8 h-0.5 bg-white transition-all" id="bar2"></div>
+        </div>
+    </nav>
+
+    <!-- Fullscreen Menu Overlay -->
+    <div class="menu-overlay fixed inset-0 bg-neutral-900 z-40 flex items-center justify-center text-center">
+        <ul class="space-y-8">
+            <li class="overflow-hidden"><a href="#home" class="menu-link block text-5xl md:text-7xl serif text-neutral-400 hover:text-white transition-colors hover-trigger translate-y-full">Home</a></li>
+            <li class="overflow-hidden"><a href="#gallery" class="menu-link block text-5xl md:text-7xl serif text-neutral-400 hover:text-white transition-colors hover-trigger translate-y-full">Works</a></li>
+            <li class="overflow-hidden"><a href="#about" class="menu-link block text-5xl md:text-7xl serif text-neutral-400 hover:text-white transition-colors hover-trigger translate-y-full">About</a></li>
+            <li class="overflow-hidden"><a href="#contact" class="menu-link block text-5xl md:text-7xl serif text-neutral-400 hover:text-white transition-colors hover-trigger translate-y-full">Contact</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <main id="home">
+        <!-- Hero Section -->
+        <section class="min-h-screen flex flex-col justify-center px-6 relative pt-20">
+            <div class="absolute inset-0 opacity-20 pointer-events-none">
+                <img src="https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2070&auto=format&fit=crop" class="w-full h-full object-cover grayscale" alt="Background Texture">
+            </div>
+            
+            <div class="max-w-7xl mx-auto w-full z-10">
+                <div class="overflow-hidden">
+                    <p class="hero-anim text-sm md:text-base tracking-[0.3em] uppercase mb-4 translate-y-full">Est. 2024</p>
+                </div>
+                <div class="overflow-hidden">
+                    <h1 class="hero-anim text-6xl md:text-9xl font-light leading-[0.9] translate-y-full">CAPTURING</h1>
+                </div>
+                <div class="overflow-hidden flex items-center gap-4">
+                    <h1 class="hero-anim text-6xl md:text-9xl font-light leading-[0.9] italic serif translate-y-full text-neutral-400">SILENCE</h1>
+                </div>
+                <div class="overflow-hidden">
+                    <h1 class="hero-anim text-6xl md:text-9xl font-light leading-[0.9] translate-y-full pl-12 md:pl-24">IN CHAOS</h1>
+                </div>
+                
+                <div class="mt-12 flex justify-between items-end overflow-hidden">
+                    <div class="hero-anim translate-y-full max-w-sm">
+                        <p class="text-neutral-400 text-sm leading-relaxed">
+                            We explore the boundaries between reality and imagination through the lens of light and shadow.
+                        </p>
+                    </div>
+                    <div class="hero-anim translate-y-full">
+                        <a href="#gallery" class="hover-trigger inline-flex items-center gap-2 border-b border-white pb-1 group">
+                            Explore Works <i data-lucide="arrow-down-right" class="w-4 h-4 transition-transform group-hover:rotate-45"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Marquee Section -->
+        <div class="py-12 border-y border-neutral-800 bg-neutral-900 overflow-hidden">
+            <div class="marquee-container">
+                <div class="marquee-content">
+                    <span class="text-4xl md:text-6xl mx-8 serif italic text-neutral-500">Portraiture</span>
+                    <span class="text-4xl md:text-6xl mx-8 font-bold text-white">Street</span>
+                    <span class="text-4xl md:text-6xl mx-8 serif italic text-neutral-500">Conceptual</span>
+                    <span class="text-4xl md:text-6xl mx-8 font-bold text-white">Fashion</span>
+                    <span class="text-4xl md:text-6xl mx-8 serif italic text-neutral-500">Fine Art</span>
+                    <span class="text-4xl md:text-6xl mx-8 font-bold text-white">Documentary</span>
+                    <!-- Duplicate for seamless loop -->
+                    <span class="text-4xl md:text-6xl mx-8 serif italic text-neutral-500">Portraiture</span>
+                    <span class="text-4xl md:text-6xl mx-8 font-bold text-white">Street</span>
+                    <span class="text-4xl md:text-6xl mx-8 serif italic text-neutral-500">Conceptual</span>
+                    <span class="text-4xl md:text-6xl mx-8 font-bold text-white">Fashion</span>
+                    <span class="text-4xl md:text-6xl mx-8 serif italic text-neutral-500">Fine Art</span>
+                    <span class="text-4xl md:text-6xl mx-8 font-bold text-white">Documentary</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gallery Section -->
+        <section id="gallery" class="py-24 px-4 md:px-12">
+            <div class="flex justify-between items-end mb-16 max-w-7xl mx-auto">
+                <h2 class="text-4xl md:text-6xl section-title">Selected Works</h2>
+                <p class="hidden md:block text-neutral-500">(2023 - 2025)</p>
+            </div>
+
+            <!-- Masonry-style Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 max-w-7xl mx-auto">
+                
+                <!-- Item 1 -->
+                <div class="md:col-span-8 gallery-item group cursor-none hover-trigger">
+                    <div class="img-container aspect-[16/10]">
+                        <img src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?q=80&w=2070&auto=format&fit=crop" alt="Urban Shadow">
+                        <div class="img-overlay absolute inset-0 flex flex-col justify-end p-6">
+                            <h3 class="text-2xl font-light italic serif">Urban Solitude</h3>
+                            <p class="text-sm text-neutral-300">Tokyo, 2024</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="md:col-span-4 gallery-item group cursor-none hover-trigger mt-0 md:mt-24">
+                    <div class="img-container aspect-[3/4]">
+                        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop" alt="Portrait">
+                         <div class="img-overlay absolute inset-0 flex flex-col justify-end p-6">
+                            <h3 class="text-2xl font-light italic serif">The Gaze</h3>
+                            <p class="text-sm text-neutral-300">Studio, 2023</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="md:col-span-5 gallery-item group cursor-none hover-trigger">
+                    <div class="img-container aspect-[4/5]">
+                        <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1948&auto=format&fit=crop" alt="Nature">
+                         <div class="img-overlay absolute inset-0 flex flex-col justify-end p-6">
+                            <h3 class="text-2xl font-light italic serif">Morning Mist</h3>
+                            <p class="text-sm text-neutral-300">Iceland, 2024</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="md:col-span-7 gallery-item group cursor-none hover-trigger">
+                    <div class="img-container aspect-[16/9]">
+                        <img src="https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=2000&auto=format&fit=crop" alt="Camera">
+                         <div class="img-overlay absolute inset-0 flex flex-col justify-end p-6">
+                            <h3 class="text-2xl font-light italic serif">Tools of Trade</h3>
+                            <p class="text-sm text-neutral-300">Editorial, 2025</p>
+                        </div>
+                    </div>
+                </div>
+
+                 <!-- Item 5 -->
+                 <div class="md:col-span-12 gallery-item group cursor-none hover-trigger mt-12">
+                    <div class="img-container aspect-[21/9]">
+                        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?q=80&w=2070&auto=format&fit=crop" alt="Landscape">
+                         <div class="img-overlay absolute inset-0 flex flex-col justify-end p-6">
+                            <h3 class="text-2xl font-light italic serif">Eternal Horizon</h3>
+                            <p class="text-sm text-neutral-300">Yosemite, 2023</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-20">
+                <button class="hover-trigger px-8 py-4 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300 text-sm tracking-widest uppercase">View Full Archive</button>
+            </div>
+        </section>
+
+        <!-- About / Philosophy Section -->
+        <section id="about" class="min-h-screen flex items-center justify-center py-24 px-6 bg-[#0a0a0a] relative overflow-hidden">
+            <!-- Decorative circle -->
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-neutral-800 rounded-full opacity-10 blur-3xl pointer-events-none"></div>
+
+            <div class="max-w-4xl mx-auto text-center z-10">
+                <p class="text-sm uppercase tracking-[0.4em] mb-8 text-neutral-400">Philosophy</p>
+                <h2 class="text-3xl md:text-5xl leading-relaxed font-light reveal-text-scroll">
+                    Photography is more than just capturing light; it is the art of <span class="serif italic text-neutral-400">stealing time</span>. We believe every frame holds a universe of unspoken emotions, waiting to be discovered by those who pause to look.
+                </h2>
+                <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div>
+                        <span class="block text-4xl font-bold mb-2">50+</span>
+                        <span class="text-xs text-neutral-500 uppercase tracking-widest">Awards</span>
+                    </div>
+                    <div>
+                        <span class="block text-4xl font-bold mb-2">120+</span>
+                        <span class="text-xs text-neutral-500 uppercase tracking-widest">Projects</span>
+                    </div>
+                    <div>
+                        <span class="block text-4xl font-bold mb-2">8</span>
+                        <span class="text-xs text-neutral-500 uppercase tracking-widest">Years</span>
+                    </div>
+                    <div>
+                        <span class="block text-4xl font-bold mb-2">12k</span>
+                        <span class="text-xs text-neutral-500 uppercase tracking-widest">Shots</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-24 px-6">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24">
+                <div>
+                    <h2 class="text-5xl md:text-7xl mb-8 serif">Let's Create<br>Together.</h2>
+                    <p class="text-neutral-400 mb-12 max-w-md leading-relaxed">
+                        Open for commissions, collaborations, and editorial work. Tell us about your story.
+                    </p>
+                    <div class="space-y-4">
+                        <a href="mailto:hello@lumina.com" class="hover-trigger block text-xl hover:text-neutral-400 transition-colors">hello@lumina.com</a>
+                        <a href="tel:+1234567890" class="hover-trigger block text-xl hover:text-neutral-400 transition-colors">+1 (555) 012-3456</a>
+                    </div>
+                    <div class="flex gap-6 mt-12">
+                        <a href="#" class="hover-trigger text-neutral-500 hover:text-white transition-colors">Instagram</a>
+                        <a href="#" class="hover-trigger text-neutral-500 hover:text-white transition-colors">Twitter</a>
+                        <a href="#" class="hover-trigger text-neutral-500 hover:text-white transition-colors">Behance</a>
+                    </div>
+                </div>
+                
+                <form class="space-y-8" onsubmit="event.preventDefault();">
+                    <div class="group">
+                        <label class="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Name</label>
+                        <input type="text" class="w-full bg-transparent border-b border-neutral-800 py-4 focus:border-white outline-none transition-colors hover-trigger" placeholder="Your Name">
+                    </div>
+                    <div class="group">
+                        <label class="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Email</label>
+                        <input type="email" class="w-full bg-transparent border-b border-neutral-800 py-4 focus:border-white outline-none transition-colors hover-trigger" placeholder="email@address.com">
+                    </div>
+                    <div class="group">
+                        <label class="block text-xs uppercase tracking-widest text-neutral-500 mb-2">Message</label>
+                        <textarea rows="4" class="w-full bg-transparent border-b border-neutral-800 py-4 focus:border-white outline-none transition-colors hover-trigger" placeholder="Tell us about your project"></textarea>
+                    </div>
+                    <button class="hover-trigger w-full bg-white text-black py-4 uppercase tracking-widest text-sm font-bold hover:bg-neutral-200 transition-colors">Send Message</button>
+                </form>
+            </div>
+        </section>
+
+        <footer class="py-8 border-t border-neutral-900 text-center text-neutral-600 text-xs uppercase tracking-widest">
+            <p>&copy; 2024 Lumina Photography. All Rights Reserved.</p>
+        </footer>
+    </main>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Register ScrollTrigger
+        gsap.registerPlugin(ScrollTrigger);
+
+        // --- Custom Cursor Logic ---
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        const hoverTriggers = document.querySelectorAll('.hover-trigger');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            // Dot follows instantly
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Outline follows with slight delay
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // Hover Effect
+        hoverTriggers.forEach(trigger => {
+            trigger.addEventListener('mouseenter', () => {
+                document.body.classList.add('hovering');
+            });
+            trigger.addEventListener('mouseleave', () => {
+                document.body.classList.remove('hovering');
+            });
+        });
+
+        // --- Loading Animation ---
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            
+            // Wait for loader animation to finish visually
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    initAnimations();
+                }, 500);
+            }, 1600);
+        });
+
+        function initAnimations() {
+            // Hero Text Reveal
+            gsap.to('.hero-anim', {
+                y: 0,
+                duration: 1.5,
+                stagger: 0.1,
+                ease: "power4.out",
+                delay: 0.2
+            });
+
+            // Gallery Staggered Fade In
+            const galleryItems = document.querySelectorAll('.gallery-item');
+            galleryItems.forEach(item => {
+                gsap.fromTo(item, 
+                    { opacity: 0, y: 50 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 1,
+                        ease: "power3.out",
+                        scrollTrigger: {
+                            trigger: item,
+                            start: "top 85%",
+                        }
+                    }
+                );
+            });
+
+            // About Text Scroll Reveal
+            gsap.from('.reveal-text-scroll', {
+                opacity: 0.2,
+                y: 20,
+                duration: 1.5,
+                ease: "power2.out",
+                scrollTrigger: {
+                    trigger: '.reveal-text-scroll',
+                    start: "top 80%",
+                    end: "bottom 20%",
+                    scrub: true
+                }
+            });
+
+            // Parallax Effect for Hero Background
+            gsap.to('.hero section img', {
+                yPercent: 30,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: "#home",
+                    start: "top top",
+                    end: "bottom top",
+                    scrub: true
+                }
+            });
+        }
+
+        // --- Menu Logic ---
+        const menuBtn = document.getElementById('menu-btn');
+        const body = document.body;
+        const menuLinks = document.querySelectorAll('.menu-link');
+        const bar1 = document.getElementById('bar1');
+        const bar2 = document.getElementById('bar2');
+        let isMenuOpen = false;
+
+        menuBtn.addEventListener('click', toggleMenu);
+
+        // Close menu when a link is clicked
+        menuLinks.forEach(link => {
+            link.addEventListener('click', toggleMenu);
+        });
+
+        function toggleMenu() {
+            isMenuOpen = !isMenuOpen;
+            
+            if (isMenuOpen) {
+                body.classList.add('menu-open');
+                
+                // Animate hamburger to X
+                bar1.style.transform = "rotate(45deg) translate(5px, 6px)";
+                bar2.style.transform = "rotate(-45deg) translate(5px, -6px)";
+                
+                // Stagger reveal links
+                gsap.to(menuLinks, {
+                    y: 0,
+                    duration: 0.8,
+                    stagger: 0.1,
+                    delay: 0.3,
+                    ease: "power3.out"
+                });
+
+            } else {
+                body.classList.remove('menu-open');
+                
+                // Reset hamburger
+                bar1.style.transform = "rotate(0) translate(0)";
+                bar2.style.transform = "rotate(0) translate(0)";
+                
+                // Hide links again
+                gsap.to(menuLinks, {
+                    y: '100%',
+                    duration: 0.5,
+                    ease: "power3.in"
+                });
+            }
+        }
+
+    </script>
+</body>
+</html>
+
